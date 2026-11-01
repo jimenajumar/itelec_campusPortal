@@ -1,0 +1,21 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class EnsureAnnouncementManager
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        if (!in_array($request->user()->role, ['admin', 'staff'])) {
+            return response()->json([
+                'message' => 'You are not authorized to manage announcements.',
+            ], 403);
+        }
+
+        return $next($request);
+    }
+}
