@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Login - ACES</title>
     @vite(['resources/css/app.css' , 'resources/js/app.js'])
@@ -59,11 +60,13 @@
         const password = document.querySelector('[name="password"]').value;
         const message = document.getElementById('loginMessage');
         try {
-            const response = await fetch('/api/login', {
+            const response = await fetch('/web-login', {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({email, password})
             });
@@ -76,7 +79,12 @@
             }
             message.textContent = 'Login successful!';
             message.className = 'text-sm text-center text-green-600';
-            window.location.href = '/dashboard';
+
+            // Save the API token for this browser session
+            sessionStorage.setItem('campus_token', data.token);
+            sessionStorage.setItem('campus_user', JSON.stringify(data.user));
+
+            window.location.href = data.redirect;
             // secure the login session.
         } catch(error) {
             message.textContent = 'Unable to connect to the server.';
