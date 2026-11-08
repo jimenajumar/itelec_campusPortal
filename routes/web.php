@@ -61,6 +61,9 @@ Route::get('/admin/room-assignments', function () {
 Route::get('/admin/activity-logs', function () {
     return view('admin.adminactivitylogs');
 });
+Route::get('/admin/memberships', function () {
+    return view('admin.adminclubmembership');
+});
 
 });
 Route::post('/web-login', function (Request $request) {

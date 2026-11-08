@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>@yield('title', 'ACES Student Portal')</title>
     @vite(['resources/css/app.css' , 'resources/js/app.js'])
@@ -29,19 +30,27 @@
 
 <body class="bg-gray-100">
     <!-- Top Bar -->
-    <div class="bg-red-800 text-white px-8 py-3 text-right justify-right -text-sm">Campus Portal
+    
+<!-- Top Bar -->
+    <div class="bg-red-800 text-white px-8 py-3 flex items-center justify-between">
+        <div class="text-sm font-semibold">
+            <span id="campusHeaderName">Campus Portal</span>
+        </div>
+
         <div class="flex items-center gap-3">
-            <div class="w-16 h-16 rounded-full bg-blue-800 text-white flex items-center justify-center text-2x1 font-serif">
-                ATCI
+            <div class="w-16 h-16 rounded-full bg-blue-800 text-white flex items-center justify-center text-2xl font-serif">
+            ATCI
             </div>
-            <div class="text-blue font-serif">
-                <h1 class="text-lg font-bold leading-tight">
-                    Evander Dayoc
+
+            <div class="font-serif">
+                <h1 id="headerStudentName" class="text-lg font-bold leading-tight">
+                Loading...
                 </h1>
                 <p class="text-sm">IICT Department</p>
             </div>
-         </div>
-     </div>
+        </div>
+    </div>
+
      <!-- Navigation -->
       <nav class="bg-white shadow-md px-4 md:px-8 py-5 flex flex-wrap items-center justify-between gap-4">
 
@@ -67,6 +76,50 @@
       <!-- Page Content -->
       @yield('content')
       <script>
+        // Load logged-in student's name
+const campusToken = sessionStorage.getItem('campus_token');
+
+if (campusToken) {
+    fetch('/api/user', {
+        headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${campusToken}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Unable to load user.');
+        return response.json();
+    })
+    .then(user => {
+        document.getElementById('headerStudentName').textContent =
+            user.name || 'Student';
+    })
+    .catch(() => {
+        document.getElementById('headerStudentName').textContent =
+            'Student';
+    });
+}
+
+if (campusToken) {
+    fetch('/api/user', {
+        headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${campusToken}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Unable to load user.');
+        return response.json();
+    })
+    .then(user => {
+        document.getElementById('headerStudentName').textContent =
+            user.name || 'Student';
+    })
+    .catch(() => {
+        document.getElementById('headerStudentName').textContent =
+            'Student';
+    });
+}
 const logoutForm = document.getElementById('logoutForm');
 
 if (logoutForm) {

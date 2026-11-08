@@ -83,6 +83,8 @@
             // Save the API token for this browser session
             sessionStorage.setItem('campus_token', data.token);
             sessionStorage.setItem('campus_user', JSON.stringify(data.user));
+            console.log('Saved token:', sessionStorage.getItem('campus_token'));
+            console.log('Logged-in user:', data.user);
 
             window.location.href = data.redirect;
             // secure the login session.

@@ -137,4 +137,15 @@ class ClubMembershipController extends Controller
                 'data' => $membership,
             ]);
     }
+    // Display the logged-in student's membership status
+public function myStatus(Request $request, Club $club)
+{
+    $membership = ClubMembership::where('club_id', $club->id)
+        ->where('student_id', $request->user()->id)
+        ->first();
+
+    return response()->json([
+        'status' => $membership?->status ?? 'not_requested',
+    ]);
+}
 }

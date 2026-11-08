@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ClubMembershipController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\RoomAssignmentController;
 use App\Http\Controllers\Api\ActivityLogController;
+use Illuminate\Http\Request;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -61,6 +62,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/clubs/{club}/reject', [ClubController::class, 'reject']);
     });
 
+    // Admin-only club advisor management
+    Route::middleware('admin')->group(function () {
+        Route::get('/club-advisors', [ClubController::class, 'advisors']);
+        Route::patch('/clubs/{club}/assign-advisor', [ClubController::class, 'assignAdvisor']);
+    });
+
     // Club Membership - view requests
     Route::get('/clubs/{club}/memberships', [
         ClubMembershipController::class,
@@ -83,6 +90,14 @@ Route::middleware('auth:sanctum')->group(function () {
         ClubMembershipController::class,
         'reject'
     ]);
+    Route::get('/clubs/{club}/my-membership', [
+    ClubMembershipController::class,
+    'myStatus'
+    ]);
+
+    Route::get('/user', function (Request $request) {
+    return $request->user();
+    });
     // Rooms - Everyone authenticated can view
     Route::get('/rooms', [RoomController::class, 'index']);
     Route::get('/rooms/{room}', [RoomController::class, 'show']);

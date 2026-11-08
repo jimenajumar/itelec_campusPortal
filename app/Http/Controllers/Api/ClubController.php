@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Club;
+use App\Models\ClubMembership;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class ClubController extends Controller
@@ -169,4 +171,46 @@ class ClubController extends Controller
             'data' => $club,
         ]);
     }
+    // List available club advisors
+public function advisors()
+{
+    $advisors = User::where('role', 'club_advisor')
+        ->orderBy('name')
+        ->get(['id', 'name', 'email']);
+
+    return response()->json($advisors);
+}
+
+// Assign or remove a club advisor
+public function assignAdvisor(Request $request, Club $club)
+{
+    $validated = $request->validate([
+        'advisor_id' => 'nullable|integer|exists:users,id',
+    ]);
+
+    if (!empty($validated['advisor_id'])) {
+        $advisor = User::findOrFail($validated['advisor_id']);
+
+        if ($advisor->role !== 'club_advisor') {
+            return response()->json([
+                'message' => 'Selected user is not a club advisor.',
+            ], 422);
+        }
+    }
+
+    $club->update([
+        'advisor_id' => $validated['advisor_id'] ?? null,
+    ]);
+
+    $this->logActivity(
+        'updated',
+        'clubs',
+        'Assigned advisor to club: ' . $club->name
+    );
+
+    return response()->json([
+        'message' => 'Club advisor updated successfully.',
+        'data' => $club->load('advisor'),
+    ]);
+}
 }

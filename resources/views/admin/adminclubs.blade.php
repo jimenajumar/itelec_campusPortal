@@ -11,6 +11,33 @@
 </div>
 
 <div class="bg-white rounded-xl shadow p-6">
+    <div class="mb-6 border rounded-xl p-5">
+    <h3 class="text-lg font-bold text-blue-950 mb-4">Add New Club</h3>
+
+    <form id="addClubForm" class="space-y-3">
+        <input
+            type="text"
+            id="clubName"
+            placeholder="Club Name"
+            class="w-full border rounded-lg px-4 py-2"
+            required
+        >
+
+        <textarea
+            id="clubDescription"
+            placeholder="Club Description"
+            class="w-full border rounded-lg px-4 py-2"
+            rows="3"
+        ></textarea>
+
+        <button
+            type="submit"
+            class="bg-blue-950 text-white px-5 py-2 rounded-lg"
+        >
+            Add Club
+        </button>
+    </form>
+</div>
 
     <div class="flex flex-col md:flex-row gap-3 mb-6">
         <input
@@ -42,6 +69,7 @@ const clubList = document.getElementById('clubList');
 const message = document.getElementById('message');
 
 let clubs = [];
+let advisors = [];
 
 function showMessage(text, success = false) {
     message.textContent = text;
@@ -76,6 +104,11 @@ async function apiRequest(url, options = {}) {
 async function loadClubs() {
     try {
         clubs = await apiRequest('/api/clubs');
+        console.log('Token:', token ? 'Present' : 'Missing');
+
+        console.log('Loaded clubs:', clubs);
+        console.log('Club count:', clubs.length);
+        
         renderClubs();
     } catch (error) {
         showMessage(error.message);
@@ -132,6 +165,53 @@ function renderClubs() {
         const currentStatus = club.status || 'pending';
         statusBadge.className += ' ' + (colors[currentStatus] || 'bg-gray-100 text-gray-700');
         statusBadge.textContent = currentStatus;
+        
+        const advisorSection = document.createElement('div');
+advisorSection.className = 'mt-4 flex flex-wrap gap-2';
+
+const advisorSelect = document.createElement('select');
+advisorSelect.className = 'border rounded-lg px-3 py-2 flex-1';
+
+const unassigned = document.createElement('option');
+unassigned.value = '';
+unassigned.textContent = 'No advisor assigned';
+advisorSelect.appendChild(unassigned);
+
+advisors.forEach(advisor => {
+    const option = document.createElement('option');
+    option.value = advisor.id;
+    option.textContent = advisor.name;
+    option.selected = Number(club.advisor_id) === Number(advisor.id);
+    advisorSelect.appendChild(option);
+});
+
+const assignButton = document.createElement('button');
+assignButton.textContent = 'Assign Advisor';
+assignButton.className = 'bg-indigo-700 text-white px-4 py-2 rounded-lg';
+
+assignButton.addEventListener('click', async () => {
+    try {
+        const result = await apiRequest(
+            `/api/clubs/${club.id}/assign-advisor`,
+            {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    advisor_id: advisorSelect.value || null
+                })
+            }
+        );
+
+        showMessage(result.message, true);
+        await loadClubs();
+    } catch (error) {
+        showMessage(error.message);
+    }
+});
+
+advisorSection.append(advisorSelect, assignButton);
 
         const actions = document.createElement('div');
         actions.className = 'flex flex-wrap gap-2 mt-4';
@@ -163,7 +243,7 @@ function renderClubs() {
         }
 
         actions.append(remove);
-        card.append(name, description, statusBadge, actions);
+        card.append(name, description, statusBadge, advisorSection, actions);
         clubList.appendChild(card);
     });
 }
@@ -228,7 +308,48 @@ document.getElementById('searchClub')
 document.getElementById('statusFilter')
     .addEventListener('change', renderClubs);
 
-loadClubs();
+
+async function loadAdvisors() {
+    try {
+        advisors = await apiRequest('/api/club-advisors');
+
+        console.log('Loaded advisors:', advisors);
+        console.log('Advisor count:', advisors.length);
+
+    } catch (error) {
+        console.error('Advisor loading error:', error);
+        showMessage(error.message);
+    }
+}
+document.getElementById('addClubForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('clubName').value.trim();
+    const description = document.getElementById('clubDescription').value.trim();
+
+    try {
+        const result = await apiRequest('/api/clubs', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: name,
+                description: description
+            })
+        });
+
+        showMessage(result.message, true);
+
+        this.reset();
+
+        await loadClubs();
+
+    } catch (error) {
+        showMessage(error.message);
+    }
+});
+loadAdvisors().then(() => loadClubs());
 </script>
 
 @endsection

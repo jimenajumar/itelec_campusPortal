@@ -64,6 +64,10 @@
                 Rooms
             </a>
             <a href="{{ url('/admin/room-assignments') }}" class="px-4 py-3 hover:text-red-700">Room Assignments</a>
+            <a href="/admin/memberships"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100">
+            <span>Club Memberships</span>
+            </a>
             <form id="logoutForm" action="{{ url('/web-logout') }}"     method="POST" class="ml-auto">
                 @csrf
                 <button type="submit"

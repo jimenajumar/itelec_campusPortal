@@ -42,9 +42,9 @@
         <span class="text-xs text-indigo-200">Latest updates</span>
     </div>
 
-    <div id="campusSlider" class="relative min-h-40">
+    <div class="slider-viewport min-h-40">
+    <div id="campusSlider" class="slider-track">
         <!-- Slide 1 -->
-<!-- Slide 1 -->
         <div class="campus-slide rounded-xl bg-indigo-800/80 p-6">
          <p class="mb-2 text-xs font-semibold uppercase tracking-widest text-indigo-200">
         Latest Events
@@ -59,26 +59,33 @@
         </div>
 
         <!-- Slide 2 -->
-        <div class="campus-slide hidden rounded-xl bg-sky-800/80 p-6">
+        <div class="campus-slide rounded-xl bg-sky-800/80 p-6">
             <p class="mb-2 text-xs font-semibold uppercase tracking-widest text-sky-200">
-                Today's Weather
+            Today's Weather — Tagum City
             </p>
-            <h3 class="text-2xl font-bold">Weather Updates</h3>
-            <p class="mt-2 text-sm text-sky-100">
-                Check the latest weather conditions for your school day.
-            </p>
+
+            <div id="campusWeather">
+                <h3 class="text-2xl font-bold">Loading weather...</h3>
+                <p class="mt-2 text-sm text-sky-100">
+                Getting current weather conditions.
+                </p>
+            </div>
         </div>
 
         <!-- Slide 3 -->
-        <div class="campus-slide hidden rounded-xl bg-rose-900/80 p-6">
+        <div class="campus-slide rounded-xl bg-rose-900/80 p-6">
             <p class="mb-2 text-xs font-semibold uppercase tracking-widest text-rose-200">
-                Announcements
+             Announcements
             </p>
-            <h3 class="text-2xl font-bold">Stay Informed!</h3>
-            <p class="mt-2 text-sm text-rose-100">
-                Check the latest announcements from the school administration.
-            </p>
+
+            <div id="latestAnnouncement">
+                <h3 class="text-2xl font-bold">Loading announcements...</h3>
+                <p class="mt-2 text-sm text-rose-100">
+                Please wait while we load the latest announcement.
+                </p>
+            </div>
         </div>
+    </div>
     </div>
 
     <!-- Slider indicators -->
@@ -237,6 +244,131 @@ if (events.length > 0) {
         console.error('Error loading events:', error);
     }
 }
+async function loadCampusAnnouncements() {
+    const announcementContainer = document.getElementById('latestAnnouncement');
+    const token = sessionStorage.getItem('campus_token');
+
+    try {
+        const response = await fetch('/api/announcements', {
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load announcements.');
+        }
+
+        const announcements = await response.json();
+
+        if (announcements.length > 0) {
+            const announcement = announcements[0];
+
+            announcementContainer.innerHTML = `
+                <h3 class="text-2xl font-bold">
+                    ${announcement.title}
+                </h3>
+                <p class="mt-2 text-sm text-rose-100">
+                    ${announcement.content}
+                </p>
+                <p class="mt-3 text-xs text-rose-200">
+                    Category: ${announcement.category || 'General'}
+                </p>
+            `;
+        } else {
+            announcementContainer.innerHTML = `
+                <h3 class="text-2xl font-bold">No announcements yet.</h3>
+                <p class="mt-2 text-sm text-rose-100">
+                    Check back later for school updates.
+                </p>
+            `;
+        }
+    } catch (error) {
+        announcementContainer.innerHTML = `
+            <h3 class="text-2xl font-bold">Unable to load announcements.</h3>
+            <p class="mt-2 text-sm text-rose-100">
+                Please try again later.
+            </p>
+        `;
+        console.error(error);
+    }
+}
+async function loadCampusWeather() {
+    const container = document.getElementById('campusWeather');
+
+    try {
+        const url = 'https://api.open-meteo.com/v1/forecast' +
+            '?latitude=7.4478&longitude=125.8078' +
+            '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m' +
+            '&timezone=Asia%2FManila';
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error('Weather request failed.');
+        }
+
+        const data = await response.json();
+        const weather = data.current;
+
+        const weatherDescriptions = {
+            0: 'Clear sky',
+            1: 'Mainly clear',
+            2: 'Partly cloudy',
+            3: 'Overcast',
+            45: 'Foggy',
+            48: 'Foggy',
+            51: 'Light drizzle',
+            53: 'Drizzle',
+            55: 'Heavy drizzle',
+            61: 'Light rain',
+            63: 'Moderate rain',
+            65: 'Heavy rain',
+            80: 'Rain showers',
+            81: 'Rain showers',
+            82: 'Heavy rain showers',
+            95: 'Thunderstorm'
+        };
+
+        const description =
+            weatherDescriptions[weather.weather_code] || 'Weather conditions updated';
+
+        container.innerHTML = `
+            <h3 class="text-4xl font-bold">
+                ${weather.temperature_2m}°C
+            </h3>
+
+            <p class="mt-1 text-lg text-sky-100">
+                ${description}
+            </p>
+
+            <div class="mt-3 flex flex-wrap gap-4 text-sm text-sky-100">
+                <span>Feels like: ${weather.apparent_temperature}°C</span>
+                <span>Humidity: ${weather.relative_humidity_2m}%</span>
+                <span>Wind: ${weather.wind_speed_10m} km/h</span>
+            </div>
+
+            <p class="mt-3 text-xs text-sky-200">
+                Updated: ${new Date(weather.time).toLocaleTimeString()}
+            </p>
+        `;
+
+    } catch (error) {
+        container.innerHTML = `
+            <h3 class="text-xl font-bold">Weather unavailable</h3>
+            <p class="mt-2 text-sm text-sky-100">
+                Please try again later.
+            </p>
+        `;
+
+        console.error('Weather error:', error);
+    }
+}
+
+loadCampusWeather();
+
+loadCampusAnnouncements();
 
 loadCampusEvents();
 
@@ -437,25 +569,24 @@ async function loadCalendarEvents() {
         }
 
         const events = await response.json();
-
         events.forEach(event => {
-            if (!event.starts_at) return;
+    if (!event.starts_at) return;
 
-            const dateKey = event.starts_at.substring(0, 10);
+    const dateKey = event.starts_at.substring(0, 10);
 
-            if (!calendarEvents[dateKey]) {
-                calendarEvents[dateKey] = [];
-            }
+    if (!calendarEvents[dateKey]) {
+        calendarEvents[dateKey] = [];
+    }
 
-            calendarEvents[dateKey].push({
-                name: event.title,
-                type: "event",
-                venue: event.venue,
-                description: event.description,
-                starts_at: event.start_at,
-                ends_at: event.ends_at,
-            });
-        });
+    calendarEvents[dateKey].push({
+        name: event.title,
+        type: "event",
+        venue: event.venue,
+        description: event.description,
+        starts_at: event.starts_at,
+        ends_at: event.ends_at,
+    });
+});
 
     } catch (error) {
         console.error("Calendar error:", error);
