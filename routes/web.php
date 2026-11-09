@@ -38,6 +38,23 @@ Route::get('/rooms', function() {
 Route::get('/room-assignments', function() {
     return view('room-assignments');
 });
+Route::middleware('auth')->group(function () {
+
+    Route::get('/club-advisor/dashboard', function () {
+        abort_unless(Auth::user()->role === 'club_advisor', 403);
+
+        return view('clubAdvisor.advisorboard');
+    });
+    Route::get('/club-advisor/memberships', function () {
+    abort_unless(Auth::user()->role === 'club_advisor', 403);
+    return view('clubAdvisor.memberships');
+    });
+    Route::get('/club-advisor/clubs', function () {
+    abort_unless(Auth::user()->role === 'club_advisor', 403);
+    return view('clubAdvisor.advisorclub');
+    });
+
+});
 Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index']);
@@ -95,9 +112,11 @@ Route::post('/web-login', function (Request $request) {
             'student_id' => $user->student_id,
         ],
         'token' => $token,
-        'redirect' => $user->role === 'admin'
-            ? '/admin/dashboard'
-            : '/dashboard',
+        'redirect' => match ($user->role) {
+    'admin' => '/admin/dashboard',
+    'club_advisor' => '/club-advisor/dashboard',
+    default => '/dashboard',
+},
     ]);
 });
 Route::post('/web-logout', function (Request $request) {

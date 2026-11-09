@@ -24,7 +24,7 @@ class UserController extends Controller
             'password' => 'required|string|min:8',
             'role' => [
                 'required',
-                Rule::in(['admin', 'staff', 'club_advisor', 'student']),
+                Rule::in(['admin', 'club_advisor', 'student']),
             ],
             'student_id' => 'nullable|string|unique:users,student_id',
         ]);

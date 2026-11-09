@@ -1,5 +1,7 @@
 
-@extends('layouts.app')
+@extends(Auth::check() && Auth::user()->role === 'club_advisor'
+    ? 'layouts.advisor'
+    : 'layouts.app')
 @section('title', 'School Events - ACES')
 @section('content')
 

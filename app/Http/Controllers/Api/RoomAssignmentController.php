@@ -24,7 +24,7 @@ class RoomAssignmentController extends Controller
     // POST: Create a room assignment
     public function store(Request $request)
     {
-        if (!in_array($request->user()->role, ['admin', 'staff'])) {
+        if ($request->user()->role !== 'admin') {
             return response()->json([
                 'message' => 'You are not authorized to create room assignments.'
             ], 403);
@@ -79,7 +79,7 @@ class RoomAssignmentController extends Controller
     // PUT: Update a room assignment
     public function update(Request $request, RoomAssignment $roomAssignment)
     {
-        if (!in_array($request->user()->role, ['admin', 'staff'])) {
+        if ($request->user()->role !== 'admin') {
             return response()->json([
                 'message' => 'You are not authorized to update room assignments.'
             ], 403);
@@ -123,21 +123,27 @@ class RoomAssignmentController extends Controller
     // DELETE: Remove a room assignment
     public function destroy(RoomAssignment $roomAssignment)
     {
-        // Save the title before deleting
-        $title = $roomAssignment->title;
-
-        // Delete the assignment
-        $roomAssignment->delete();
-
-        // Record the activity
-        $this->logActivity(
-            'deleted',
-            'room_assignments',
-            'Deleted room assignment: ' . $title
-        );
-
+    if (request()->user()->role !== 'admin') {
         return response()->json([
-            'message' => 'Room assignment deleted successfully.',
-        ]);
+            'message' => 'You are not authorized to delete room assignments.'
+        ], 403);
     }
+
+    // Save the title before deleting
+    $title = $roomAssignment->title;
+
+    // Delete the assignment
+    $roomAssignment->delete();
+
+    // Record the activity
+    $this->logActivity(
+        'deleted',
+        'room_assignments',
+        'Deleted room assignment: ' . $title
+    );
+
+    return response()->json([
+        'message' => 'Room assignment deleted successfully.',
+    ]);
+}
 }

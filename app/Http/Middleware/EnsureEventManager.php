@@ -12,11 +12,7 @@ class EnsureEventManager
     {
         $user = $request->user();
 
-        if (!$user || !in_array($user->role, [
-            'admin',
-            'staff',
-            'club_advisor',
-        ])) {
+        if (!$user || $user->role !== 'admin') {
     return response()->json([
     'message' => 'You are not authorized to manage events.',
 ], 403);

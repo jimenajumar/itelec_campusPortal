@@ -15,9 +15,9 @@ class AnnouncementController extends Controller
     $query = Announcement::latest();
 
     // Students and Club Advisors can only see published announcements.
-    if (!in_array($user->role, ['admin', 'staff'])) {
-        $query->where('is_published', true);
-    }
+    if ($user->role !== 'admin') {
+    $query->where('is_published', true);
+}
 
     return response()->json($query->get());
 }
@@ -52,9 +52,9 @@ class AnnouncementController extends Controller
     $user = $request->user();
 
     if (
-        !in_array($user->role, ['admin', 'staff']) &&
-        !$announcement->is_published
-    ) {
+    $user->role !== 'admin' &&
+    !$announcement->is_published
+) {
         return response()->json([
             'message' => 'Announcement not found.',
         ], 404);

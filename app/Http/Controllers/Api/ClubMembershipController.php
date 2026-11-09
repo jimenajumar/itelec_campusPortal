@@ -15,11 +15,11 @@ class ClubMembershipController extends Controller
         $user = $request->user();
 
         if (
-            !in_array($user->role, ['admin', 'staff']) &&
+            $user->role !== 'admin' &&
             (int) $club->advisor_id !== (int) $user->id
         ) {
             return response()->json([
-                'message' => 'You are not authorized to view these membership requests.',
+            'message' => 'You are not authorized to view these membership requests.',
             ], 403);
         }
 
@@ -41,6 +41,16 @@ class ClubMembershipController extends Controller
             return response()->json([
                 'message' => 'You can only join approved clubs.',
             ], 403);
+        }
+        // Check the student's approved club memberships
+        $approvedClubs = ClubMembership::where('student_id', $request->user()->id)
+        ->where('status', 'approved')
+        ->count();
+
+        if ($approvedClubs >= 3) {
+        return response()->json([
+        'message' => 'You can only join a maximum of three clubs.',
+        ], 422);
         }
 
         $existing = ClubMembership::where('club_id', $club->id)
@@ -90,7 +100,18 @@ class ClubMembershipController extends Controller
             ], 422);
         }
 
-        $membership->update(['status' => 'approved']);
+       // Check the student's current approved memberships
+        $approvedClubs = ClubMembership::where('student_id', $membership->student_id)
+        ->where('status', 'approved')
+        ->count();
+
+        if ($approvedClubs >= 3) {
+        return response()->json([
+        'message' => 'This student has already reached the maximum of three clubs.',
+        ], 422);
+        }
+
+$membership->update(['status' => 'approved']);;
 
         $this->logActivity(
             'approved',

@@ -15,16 +15,10 @@ class EventController extends Controller
 
         $query = Event::latest();
 
-        // Admin and Staff can see all events.
-        // Club Advisors can see their own events and approved events.
-        // Students can only see approved events.
-        if ($user->role === 'club_advisor') {
-            $query->where(function ($q) use ($user) {
-                $q->where('created_by', $user->id)
-                    ->orWhere('status', 'approved');
-            });
-        } elseif (!in_array($user->role, ['admin', 'staff'])) {
-            $query->where('status', 'approved');
+        // Admin can see all events.
+        // Club Advisors and Students can only see approved events.
+        if ($user->role !== 'admin') {
+        $query->where('status', 'approved');
         }
 
         return response()->json($query->get());
@@ -64,9 +58,8 @@ class EventController extends Controller
         $user = $request->user();
 
         if (
-            !in_array($user->role, ['admin', 'staff']) &&
-            $event->status !== 'approved' &&
-            !($user->role === 'club_advisor' && $event->created_by === $user->id)
+            $user->role !== 'admin' &&
+        $event->status !== 'approved'
         ) {
             return response()->json([
                 'message' => 'Event not found.',
@@ -81,14 +74,11 @@ class EventController extends Controller
     {
         $user = $request->user();
 
-        if (
-            $user->role === 'club_advisor' &&
-            (int) $event->created_by !== (int) $user->id
-        ) {
-            return response()->json([
-                'message' => 'You can only update your own events.',
-            ], 403);
-        }
+       if ($user->role !== 'admin') {
+    return response()->json([
+        'message' => 'Only administrators can update events.',
+    ], 403);
+}
 
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
@@ -115,14 +105,11 @@ class EventController extends Controller
     {
         $user = $request->user();
 
-        if (
-            $user->role === 'club_advisor' &&
-            (int) $event->created_by !== (int) $user->id
-        ) {
+        if ($user->role !== 'admin') {
             return response()->json([
-                'message' => 'You can only delete your own events.',
+            'message' => 'Only administrators can delete events.',
             ], 403);
-        }
+    }
 
         $this->logActivity(
             'deleted',
@@ -138,9 +125,21 @@ class EventController extends Controller
     }
 
     // Approve an event
-    public function approve(Event $event)
-    {
-        $event->update(['status' => 'approved']);
+    public function approve(Request $request, Event $event)
+{
+    if ($request->user()->role !== 'admin') {
+        return response()->json([
+            'message' => 'Only administrators can approve events.',
+        ], 403);
+    }
+
+    if ($event->status !== 'pending') {
+        return response()->json([
+            'message' => 'Only pending events can be approved.',
+        ], 422);
+    }
+
+    $event->update(['status' => 'approved']);
 
         $this->logActivity(
             'approved',
@@ -155,9 +154,21 @@ class EventController extends Controller
     }
 
     // Reject an event
-    public function reject(Event $event)
-    {
-        $event->update(['status' => 'rejected']);
+    public function reject(Request $request, Event $event)
+{
+    if ($request->user()->role !== 'admin') {
+        return response()->json([
+            'message' => 'Only administrators can reject events.',
+        ], 403);
+    }
+
+    if ($event->status !== 'pending') {
+        return response()->json([
+            'message' => 'Only pending events can be rejected.',
+        ], 422);
+    }
+
+    $event->update(['status' => 'rejected']);
 
         $this->logActivity(
             'rejected',

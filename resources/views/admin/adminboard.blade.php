@@ -53,7 +53,7 @@
             <a href="{{ url('/admin/users') }}"
                class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition">
                 <h3 class="font-bold text-lg text-blue-950">User Management</h3>
-                <p class="text-gray-500 text-sm mt-2">Manage student and staff accounts.</p>
+                <p class="text-gray-500 text-sm mt-2">Manage student, club advisors and admin accounts.</p>
             </a>
 
             <a href="{{ url('/admin/events') }}"

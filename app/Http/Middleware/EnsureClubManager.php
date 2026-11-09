@@ -14,7 +14,6 @@ class EnsureClubManager
 
         if (!$user || !in_array($user->role, [
             'admin',
-            'staff',
             'club_advisor',
         ])) {
             return response()->json([

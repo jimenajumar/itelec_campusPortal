@@ -44,7 +44,6 @@
         <select name="role" required class="border rounded-lg p-3">
             <option value="">Select User Role</option>
             <option value="admin">Admin</option>
-            <option value="staff">Staff</option>
             <option value="club_advisor">Club Advisor</option>
             <option value="student">Student</option>
         </select>
@@ -64,7 +63,7 @@
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-blue-950">User Management</h1>
         <p class="text-gray-500 mt-2">
-            Manage and view registered students, staff, and administrators.
+           Manage and view registered students, club advisors, and administrators.
         </p>
     </div>
 
@@ -94,7 +93,6 @@
 
                 <option value="all">All Roles</option>
                 <option value="admin">Admin</option>
-                <option value="staff">Staff</option>
                 <option value="club_advisor">Club Advisor</option>
                 <option value="student">Student</option>
 
